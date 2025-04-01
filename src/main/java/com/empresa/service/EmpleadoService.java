@@ -5,29 +5,24 @@ import com.empresa.model.Empleado;
 import com.empresa.repository.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
 public class EmpleadoService {
 
     @Autowired
-    private EmpleadoRepository repository;
+    private EmpleadoRepository empleadoRepository;
 
-    public List<Empleado> listarTodos() {
-        return repository.findAll();
+    public List<Empleado> listarEmpleados() {
+        return empleadoRepository.findAll();
     }
 
-    public Empleado guardar(Empleado empleado) {
-        return repository.save(empleado);
+    public Empleado guardarEmpleado(Empleado empleado) {
+        return empleadoRepository.save(empleado);
     }
 
-    public Empleado obtenerPorId(Long id) {
-        return repository.findById(id).orElse(null);
-    }
-
-    public void eliminar(Long id) {
-        repository.deleteById(id);
+    public void eliminarEmpleado(Integer id) {
+        empleadoRepository.deleteById(id);
     }
 }
 
