@@ -96,8 +96,8 @@
         let id = $("#idEmpleado").val();
         let empleado = {
             numeroDui: $("#numeroDui").val(),
-            nombre: $("#nombre").val(),
-            correo: $("#correo").val(),
+            nombrePersona: $("#nombre").val(),
+            correctInstitutional: $("#correo").val(),
             cargo: $("#cargo").val()
         };
 
@@ -122,8 +122,8 @@
     function editarEmpleado(empleado) {
         $("#idEmpleado").val(empleado.idEmpleado);
         $("#numeroDui").val(empleado.numeroDui);
-        $("#nombre").val(empleado.nombre);
-        $("#correo").val(empleado.correo);
+        $("#nombre").val(empleado.nombrePersona);
+        $("#correo").val(empleado.correctInstitutional);
         $("#cargo").val(empleado.cargo);
     }
 
