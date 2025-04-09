@@ -41,4 +41,16 @@ public class EmpleadoController {
             return ResponseEntity.internalServerError().body("Error al eliminar empleado: " + e.getMessage());
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarEmpleado(@PathVariable Integer id, @RequestBody Empleado empleado) {
+        try {
+            empleado.setIdEmpleado(id); // Asegura que el ID se mantenga correcto
+            Empleado actualizado = empleadoService.guardarEmpleado(empleado);
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al actualizar empleado: " + e.getMessage());
+        }
+    }
+
 }

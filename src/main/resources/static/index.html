@@ -3,95 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Empleados</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid black; padding: 8px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        button { margin: 5px; padding: 5px 10px; }
-    </style>
+    <title>Gestión de Empleados</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+<div class="container mt-4">
+    <h2 class="text-center">Gestión de Empleados</h2>
 
-<h2>Gestión de Empleados</h2>
+    <button class="btn btn-success mb-3" onclick="limpiarFormulario()" data-bs-toggle="modal" data-bs-target="#empleadoModal">Agregar Empleado</button>
 
-<form id="empleadoForm">
-    <input type="text" id="nombre" placeholder="Nombre" required>
-    <input type="text" id="cargo" placeholder="Cargo" required>
-    <input type="number" id="salario" placeholder="Salario" required>
-    <button type="submit">Agregar</button>
-</form>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>DUI</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Cargo</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody id="empleadosTable"></tbody>
+    </table>
+</div>
 
-<h3>Lista de Empleados</h3>
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Cargo</th>
-        <th>Salario</th>
-        <th>Acciones</th>
-    </tr>
-    </thead>
-    <tbody id="empleadoLista"></tbody>
-</table>
+<!--  formulario de empleado -->
+<div class="modal fade" id="empleadoModal" tabindex="-1" aria-labelledby="empleadoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="empleadoForm">
+                    <input type="hidden" id="idEmpleado">
+                    <div class="mb-3">
+                        <label>DUI:</label>
+                        <input type="text" id="numeroDui" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Nombre:</label>
+                        <input type="text" id="nombre" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Correo:</label>
+                        <input type="email" id="correo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Cargo:</label>
+                        <input type="text" id="cargo" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEmpleado()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     const API_URL = "http://localhost:8080/api/empleados";
 
-    document.addEventListener("DOMContentLoaded", obtenerEmpleados);
-    document.getElementById("empleadoForm").addEventListener("submit", agregarEmpleado);
+    $(document).ready(function () {
+        cargarEmpleados();
+    });
 
-    function obtenerEmpleados() {
-        fetch(API_URL)
-            .then(res => res.json())
-            .then(empleados => {
-                let contenido = "";
-                empleados.forEach(emp => {
-                    contenido += `
-                        <tr>
-                            <td>${emp.id}</td>
-                            <td>${emp.nombre}</td>
-                            <td>${emp.cargo}</td>
-                            <td>${emp.salario}</td>
-                            <td>
-                                <button onclick="eliminarEmpleado(${emp.id})">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                document.getElementById("empleadoLista").innerHTML = contenido;
-            })
-            .catch(err => console.error("Error al obtener empleados:", err));
+    function cargarEmpleados() {
+        $.get(API_URL, function (data) {
+            let tabla = "";
+            data.forEach(emp => {
+                tabla += `<tr>
+                        <td>${emp.idEmpleado}</td>
+                        <td>${emp.numeroDui}</td>
+                        <td>${emp.nombrePersona}</td>
+                        <td>${emp.correctInstitutional}</td>
+                        <td>${emp.cargo}</td>
+                        <td>
+                            <button class='btn btn-warning' onclick='editarEmpleado(${JSON.stringify(emp)})' data-bs-toggle='modal' data-bs-target='#empleadoModal'>Editar</button>
+                            <button class='btn btn-danger' onclick='eliminarEmpleado(${emp.idEmpleado})'>Eliminar</button>
+                        </td>
+                    </tr>`;
+            });
+            $("#empleadosTable").html(tabla);
+        });
     }
 
-    function agregarEmpleado(e) {
-        e.preventDefault();
-        const nombre = document.getElementById("nombre").value.trim();
-        const cargo = document.getElementById("cargo").value.trim();
-        console.log(cargo)
-        const salario = parseFloat(document.getElementById("salario").value);
+    function guardarEmpleado() {
+        let id = $("#idEmpleado").val();
+        let empleado = {
+            numeroDui: $("#numeroDui").val(),
+            nombrePersona: $("#nombre").val(),
+            correctInstitutional: $("#correo").val(),
+            cargo: $("#cargo").val()
+        };
 
-        if (!nombre || !cargo || isNaN(salario)) {
-            alert("Todos los campos son obligatorios.");
+        let metodo = id ? "PUT" : "POST";
+        let url = id ? `${API_URL}/${id}` : API_URL;
 
-        }
+        $.ajax({
+            url: url,
+            type: metodo,
+            contentType: "application/json",
+            data: JSON.stringify(empleado),
+            success: function () {
+                $("#empleadoModal").modal("hide");
+                cargarEmpleados();
+            },
+            error: function (xhr) {
+                alert("Error al guardar/actualizar: " + xhr.responseText);
+            }
+        });
+    }
 
-
-
+    function editarEmpleado(empleado) {
+        $("#idEmpleado").val(empleado.idEmpleado);
+        $("#numeroDui").val(empleado.numeroDui);
+        $("#nombre").val(empleado.nombrePersona);
+        $("#correo").val(empleado.correctInstitutional);
+        $("#cargo").val(empleado.cargo);
     }
 
     function eliminarEmpleado(id) {
-        fetch(`${API_URL}/${id}`, { method: "DELETE" })
-            .then(res => {
-                if (!res.ok) throw new Error("Error al eliminar");
-                obtenerEmpleados();
-            })
-            .catch(err => console.error("Error al eliminar empleado:", err));
+        if (confirm("¿Deseas eliminar este empleado?")) {
+            $.ajax({
+                url: `${API_URL}/${id}`,
+                type: "DELETE",
+                success: function () {
+                    cargarEmpleados();
+                },
+                error: function (xhr) {
+                    alert("Error al eliminar: " + xhr.responseText);
+                }
+            });
+        }
     }
+
+    function limpiarFormulario() {
+        $("#idEmpleado").val;
+        $("#numeroDui").val;
+        $("#nombre").val;
+        $("#correo").val;
+        $("#cargo").val;
+    }
+
 </script>
-
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
 </body>
 </html>
