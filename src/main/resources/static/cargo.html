@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cargos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="m-3">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link " aria-current="page" href="index.html">Active</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="cargo.html">Cargos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="empleado.html">Empleados</a>
+        </li>
+
+    </ul>
+</nav>
+
+
+
+<div class="container my-4 mt-2">
+
+
+    <!-- Botón para crear nuevo cargo -->
+    <button class="btn btn-success" onclick="mostrarModalCargo()">Nuevo Cargo</button>
+
+    <!-- Contenedor de la tabla -->
+    <div id="contenedor-cargos"></div>
+
+    <!-- Modal para registrar o editar -->
+    <div id="cargoModal" class="modal fade" tabindex="-1" aria-labelledby="cargoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cargoModalLabel">Nuevo Cargo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="idCargo">
+                    <div class="mb-3">
+                        <label for="cargo" class="form-label">Nombre del cargo</label>
+                        <input type="text" id="cargo" class="form-control" placeholder="Nombre del cargo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcionCargo" class="form-label">Descripción</label>
+                        <textarea id="descripcionCargo" class="form-control" placeholder="Descripción del cargo"></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarCargo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Cambiado: corregir URL de API_CARGO
+    // Antes:
+    // const API_CARGO = window.location.origin + "http://localhost:8080/api/cargos";
+    const API_CARGO = window.location.origin + '/api/cargos';
+
+    function cargarVistaCargos() {
+        $.get(API_CARGO, function (data) {
+            let tabla = `
+                <table class="table table-bordered table-striped my-4 w-75 mx-auto">
+                    <thead>
+                        <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach(c => {
+                tabla += `
+                    <tr>
+                        <td>${c.idCargo}</td>
+                        <td>${c.cargo}</td>
+                        <td>${c.descripcionCargo || ''}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editarCargo(${c.idCargo}, '${c.cargo}', '${c.descripcionCargo || ''}')">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarCargo(${c.idCargo})">Eliminar</button>
+                        </td>
+                    </tr>`;
+            });
+
+            tabla += `</tbody></table>`;
+            $("#contenedor-cargos").html(tabla);
+        });
+    }
+
+    function mostrarModalCargo() {
+        $("#idCargo").val('');
+        $("#cargo").val('');
+        $("#descripcionCargo").val('');
+        $("#cargoModal").modal('show');
+    }
+
+    function editarCargo(id, nombre, descripcion) {
+        $("#idCargo").val(id);
+        $("#cargo").val(nombre);
+        $("#descripcionCargo").val(descripcion);
+        $("#cargoModal").modal('show');
+    }
+
+    function guardarCargo() {
+        const id = $("#idCargo").val();
+        const cargo = {
+            idCargo: id ? parseInt(id) : null,  // Convertir a número si existe
+            cargo: $("#cargo").val().trim(),
+            descripcionCargo: $("#descripcionCargo").val().trim()
+        };
+
+        // Solo incluir el ID si estamos editando
+        if (id && id !== '') {
+            cargo.idCargo = parseInt(id);
+        }
+
+        // Validación básica
+        if (!cargo.cargo) {
+            alert("El nombre del cargo es obligatorio");
+            return;
+        }
+
+        const metodo = id && id !== '' ? "PUT" : "POST";
+        const url = id && id !== '' ? `${API_CARGO}/${id}` : API_CARGO;
+
+        $.ajax({
+            url: url,
+            type: metodo,
+            contentType: "application/json",
+            data: JSON.stringify(cargo),
+            success: function (response) {
+                $("#cargoModal").modal('hide');
+                cargarVistaCargos();
+            },
+            error: function (xhr) {
+                console.error("Error:", xhr);
+                alert("Error: " + (xhr.responseJSON || "Error al guardar el cargo"));
+            }
+        });
+    }
+
+    function cargarCargos() {
+        $.get(API_CARGO, function(data) {
+            let options = '<option value="">Seleccione un cargo</option>';
+            data.forEach(function(cargo) {
+                options += `<option value="${cargo.idCargo}">${cargo.cargo}</option>`;
+            });
+            $('#cargoSelect').html(options);
+        });
+    }
+
+    function eliminarCargo(id) {
+        if (confirm("¿Seguro que deseas eliminar este cargo?")) {
+            $.ajax({
+                url: `${API_CARGO}/${id}`,
+                type: "DELETE",
+                success: function () {
+                    cargarVistaCargos();
+                },
+                error: function (xhr) {
+                    alert("Error: " + xhr.responseText);
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        cargarVistaCargos();
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+</body>
+</html>

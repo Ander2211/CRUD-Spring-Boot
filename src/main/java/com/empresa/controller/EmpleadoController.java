@@ -1,15 +1,18 @@
 package com.empresa.controller;
 
-
 import com.empresa.model.Empleado;
 import com.empresa.service.EmpleadoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*") // Permitir llamadas desde el frontend
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/empleados")
 public class EmpleadoController {
@@ -23,7 +26,14 @@ public class EmpleadoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> guardarEmpleado(@RequestBody Empleado empleado) {
+    public ResponseEntity<?> guardarEmpleado(@Valid @RequestBody Empleado empleado, BindingResult result) {
+        if (result.hasErrors()) {
+            List<String> errores = result.getFieldErrors()
+                    .stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(errores);
+        }
         try {
             Empleado nuevoEmpleado = empleadoService.guardarEmpleado(empleado);
             return ResponseEntity.ok(nuevoEmpleado);
@@ -43,9 +53,16 @@ public class EmpleadoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarEmpleado(@PathVariable Integer id, @RequestBody Empleado empleado) {
+    public ResponseEntity<?> actualizarEmpleado(@PathVariable Integer id, @Valid @RequestBody Empleado empleado, BindingResult result) {
+        if (result.hasErrors()) {
+            List<String> errores = result.getFieldErrors()
+                    .stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(errores);
+        }
         try {
-            empleado.setIdEmpleado(id); // Asegura que el ID se mantenga correcto
+            empleado.setIdEmpleado(id);
             Empleado actualizado = empleadoService.guardarEmpleado(empleado);
             return ResponseEntity.ok(actualizado);
         } catch (Exception e) {

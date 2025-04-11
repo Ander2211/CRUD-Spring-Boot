@@ -8,6 +8,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+
+    <nav class="m-3">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="index.html">Active</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="cargo.html">Cargos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="empleado.html">Empleados</a>
+            </li>
+
+        </ul>
+    </nav>
+
 <div class="container mt-4">
     <h2 class="text-center">Gestión de Empleados</h2>
 
@@ -52,8 +68,10 @@
                         <input type="email" id="correo" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label>Cargo:</label>
-                        <input type="text" id="cargo" class="form-control" required>
+                        <label for="cargoSelect" class="form-label">Cargo</label>
+                        <select id="cargoSelect" class="form-control">
+                            <option value="">Seleccione un cargo</option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -67,9 +85,11 @@
 
 <script>
     const API_URL = "http://localhost:8080/api/empleados";
+    const API_CARGO = "http://localhost:8080/api/cargos"; // Agregado: URL para los cargos
 
     $(document).ready(function () {
         cargarEmpleados();
+        cargarCargos(); // Llamar a cargarCargos al cargar la página
     });
 
     function cargarEmpleados() {
@@ -98,7 +118,7 @@
             numeroDui: $("#numeroDui").val(),
             nombrePersona: $("#nombre").val(),
             correctInstitutional: $("#correo").val(),
-            cargo: $("#cargo").val()
+            cargo: $("#cargoSelect option:selected").text()
         };
 
         let metodo = id ? "PUT" : "POST";
@@ -111,6 +131,7 @@
             data: JSON.stringify(empleado),
             success: function () {
                 $("#empleadoModal").modal("hide");
+                alert("Empleado guardado/actualizado correctamente");
                 cargarEmpleados();
             },
             error: function (xhr) {
@@ -142,13 +163,29 @@
         }
     }
 
-    function limpiarFormulario() {
-        $("#idEmpleado").val;
-        $("#numeroDui").val;
-        $("#nombre").val;
-        $("#correo").val;
-        $("#cargo").val;
+    // Cargar cargos en el select
+    function cargarCargos() {
+        $.get(API_CARGO, function(data) {
+            let options = '<option value="">Seleccione un cargo</option>';
+            data.forEach(function(cargo) {
+                options += `<option value="${cargo.idCargo}">${cargo.cargo}</option>`;
+            });
+            $('#cargoSelect').html(options);
+        });
     }
+
+    function limpiarFormulario() {
+        $("#idEmpleado").val("");
+        $("#numeroDui").val("");
+        $("#nombre").val("");
+        $("#correo").val("");
+        $("#cargoSelect").val(""); // Corregido: limpiar el campo select
+    }
+
+    // Llamar a cargarCargos cada vez que se abra el modal
+    $('#empleadoModal').on('show.bs.modal', function () {
+        cargarCargos();
+    });
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
