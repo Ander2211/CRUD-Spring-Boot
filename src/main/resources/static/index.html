@@ -3,25 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Empleados</title>
+    <title>Sistema de Recursos Humanos</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-
-    <nav class="m-3">
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="index.html">Active</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="cargo.html">Cargos</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="empleado.html">Empleados</a>
-            </li>
-
-        </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Recursos Humanos</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cargo.html">Cargos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="departamento.html">Departamentos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="empleado.html">Empleados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="tipo-contratacion.html">Tipos de Contratación</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contratacion.html">Contrataciones</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </nav>
 
 <div class="container mt-4">
@@ -57,19 +72,31 @@
                     <input type="hidden" id="idEmpleado">
                     <div class="mb-3">
                         <label>DUI:</label>
-                        <input type="text" id="numeroDui" class="form-control" required>
+                        <input type="text" id="numeroDui" class="form-control" pattern="^[0-9]{8}-[0-9]$" title="El DUI debe tener el formato 12345678-9" required>
                     </div>
                     <div class="mb-3">
                         <label>Nombre:</label>
                         <input type="text" id="nombre" class="form-control" required>
                     </div>
                     <div class="mb-3">
+                        <label>Usuario:</label>
+                        <input type="text" id="usuario" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Teléfono:</label>
+                        <input type="text" id="numericTelefono" class="form-control" pattern="^[0-9]{8}$" title="El teléfono debe tener exactamente 8 dígitos" required>
+                    </div>
+                    <div class="mb-3">
                         <label>Correo:</label>
                         <input type="email" id="correo" class="form-control" required>
                     </div>
                     <div class="mb-3">
+                        <label>Fecha de Nacimiento:</label>
+                        <input type="date" id="fechAlacimiento" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
                         <label for="cargoSelect" class="form-label">Cargo</label>
-                        <select id="cargoSelect" class="form-control">
+                        <select id="cargoSelect" class="form-control" required>
                             <option value="">Seleccione un cargo</option>
                         </select>
                     </div>
@@ -113,16 +140,63 @@
     }
 
     function guardarEmpleado() {
-        let id = $("#idEmpleado").val();
+        const duiRegex = /^[0-9]{8}-[0-9]$/;
+        const telefonoRegex = /^[0-9]{8}$/;
+        
+        const dui = $("#numeroDui").val().trim();
+        const telefono = $("#numericTelefono").val().trim();
+        
+        if (!duiRegex.test(dui)) {
+            alert("El DUI debe tener el formato 12345678-9");
+            return;
+        }
+        
+        if (!telefonoRegex.test(telefono)) {
+            alert("El teléfono debe tener exactamente 8 dígitos");
+            return;
+        }
+        
         let empleado = {
-            numeroDui: $("#numeroDui").val(),
-            nombrePersona: $("#nombre").val(),
-            correctInstitutional: $("#correo").val(),
-            cargo: $("#cargoSelect option:selected").text()
+            idEmpleado: $("#idEmpleado").val() || null,
+            numeroDui: $("#numeroDui").val().trim(),
+            nombrePersona: $("#nombre").val().trim(),
+            usuario: $("#usuario").val().trim(),
+            numericTelefono: $("#numericTelefono").val().trim(),
+            correctInstitutional: $("#correo").val().trim(),
+            fechAlacimiento: $("#fechAlacimiento").val(),
+            cargo: {
+                idCargo: $("#cargoSelect").val()
+            }
         };
 
-        let metodo = id ? "PUT" : "POST";
-        let url = id ? `${API_URL}/${id}` : API_URL;
+        // Validaciones adicionales
+        if (!empleado.nombrePersona) {
+            alert("El nombre es obligatorio");
+            return;
+        }
+        if (!empleado.usuario) {
+            alert("El usuario es obligatorio");
+            return;
+        }
+        if (!empleado.numericTelefono) {
+            alert("El teléfono es obligatorio");
+            return;
+        }
+        if (!empleado.correctInstitutional) {
+            alert("El correo institucional es obligatorio");
+            return;
+        }
+        if (!empleado.fechAlacimiento) {
+            alert("La fecha de nacimiento es obligatoria");
+            return;
+        }
+        if (!empleado.cargo.idCargo) {
+            alert("Debe seleccionar un cargo");
+            return;
+        }
+
+        let metodo = empleado.idEmpleado ? "PUT" : "POST";
+        let url = empleado.idEmpleado ? `${API_URL}/${empleado.idEmpleado}` : API_URL;
 
         $.ajax({
             url: url,
@@ -135,7 +209,14 @@
                 cargarEmpleados();
             },
             error: function (xhr) {
-                alert("Error al guardar/actualizar: " + xhr.responseText);
+                console.error("Error:", xhr);
+                let errorMessage = "Error al guardar/actualizar el empleado";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage += ": " + xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    errorMessage += ": " + xhr.responseText;
+                }
+                alert(errorMessage);
             }
         });
     }
@@ -144,8 +225,11 @@
         $("#idEmpleado").val(empleado.idEmpleado);
         $("#numeroDui").val(empleado.numeroDui);
         $("#nombre").val(empleado.nombrePersona);
+        $("#usuario").val(empleado.usuario);
+        $("#numericTelefono").val(empleado.numericTelefono);
         $("#correo").val(empleado.correctInstitutional);
-        $("#cargo").val(empleado.cargo);
+        $("#fechAlacimiento").val(empleado.fechAlacimiento);
+        $("#cargoSelect").val(empleado.cargo ? empleado.cargo.idCargo : "");
     }
 
     function eliminarEmpleado(id) {
@@ -178,8 +262,11 @@
         $("#idEmpleado").val("");
         $("#numeroDui").val("");
         $("#nombre").val("");
+        $("#usuario").val("");
+        $("#numericTelefono").val("");
         $("#correo").val("");
-        $("#cargoSelect").val(""); // Corregido: limpiar el campo select
+        $("#fechAlacimiento").val("");
+        $("#cargoSelect").val("");
     }
 
     // Llamar a cargarCargos cada vez que se abra el modal

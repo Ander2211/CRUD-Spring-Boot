@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tipos de Contratación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">Recursos Humanos</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cargo.html">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="departamento.html">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="empleado.html">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="tipo-contratacion.html">Tipos de Contratación</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="contratacion.html">Contrataciones</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="container mt-4">
+        <h2>Gestión de Tipos de Contratación</h2>
+        
+        <!-- Formulario -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="tipoContratacionForm">
+                    <input type="hidden" id="idTipoContratacion">
+                    <div class="mb-3">
+                        <label for="tipoContratacion" class="form-label">Tipo de Contratación</label>
+                        <input type="text" class="form-control" id="tipoContratacion" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">Nuevo</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo de Contratación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tiposContratacionTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function cargarTiposContratacion() {
+            $.get('/tipos-contratacion', function(data) {
+                $('#tiposContratacionTableBody').empty();
+                data.forEach(function(tipo) {
+                    $('#tiposContratacionTableBody').append(`
+                        <tr>
+                            <td>${tipo.idTipoContratacion}</td>
+                            <td>${tipo.tipoContratacion}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarTipoContratacion(${tipo.idTipoContratacion})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarTipoContratacion(${tipo.idTipoContratacion})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        function limpiarFormulario() {
+            $('#tipoContratacionForm')[0].reset();
+            $('#idTipoContratacion').val('');
+        }
+
+        function editarTipoContratacion(id) {
+            $.get(`/tipos-contratacion/editar/${id}`, function(tipo) {
+                $('#idTipoContratacion').val(tipo.idTipoContratacion);
+                $('#tipoContratacion').val(tipo.tipoContratacion);
+            });
+        }
+
+        function eliminarTipoContratacion(id) {
+            if (confirm('¿Está seguro de eliminar este tipo de contratación?')) {
+                $.ajax({
+                    url: `/tipos-contratacion/eliminar/${id}`,
+                    type: 'DELETE',
+                    success: function() {
+                        cargarTiposContratacion();
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            cargarTiposContratacion();
+
+            $('#tipoContratacionForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const tipoContratacion = {
+                    idTipoContratacion: $('#idTipoContratacion').val(),
+                    tipoContratacion: $('#tipoContratacion').val()
+                };
+
+                $.post('/tipos-contratacion/guardar', tipoContratacion, function() {
+                    limpiarFormulario();
+                    cargarTiposContratacion();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

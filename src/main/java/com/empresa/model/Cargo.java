@@ -20,5 +20,8 @@ public class Cargo {
     @Column(name = "descripcionCargo")
     private String descripcionCargo;
 
+    @Column(name = "belatura", nullable = false)
+    private Boolean belatura;
+
     // Getters y Setters
 }

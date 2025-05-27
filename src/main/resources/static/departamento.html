@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Departamentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">Recursos Humanos</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cargo.html">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="departamento.html">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="empleado.html">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="tipo-contratacion.html">Tipos de Contratación</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="contratacion.html">Contrataciones</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="container mt-4">
+        <h2>Gestión de Departamentos</h2>
+        
+        <!-- Formulario -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="departamentoForm">
+                    <input type="hidden" id="idDepartamento">
+                    <div class="mb-3">
+                        <label for="nombreDepartamento" class="form-label">Nombre del Departamento</label>
+                        <input type="text" class="form-control" id="nombreDepartamento" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcionDepartamento" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionDepartamento"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">Nuevo</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="departamentosTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function cargarDepartamentos() {
+            $.get('/departamentos', function(data) {
+                $('#departamentosTableBody').empty();
+                data.forEach(function(dep) {
+                    $('#departamentosTableBody').append(`
+                        <tr>
+                            <td>${dep.idDepartamento}</td>
+                            <td>${dep.nombreDepartamento}</td>
+                            <td>${dep.descripcionDepartamento || ''}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarDepartamento(${dep.idDepartamento})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarDepartamento(${dep.idDepartamento})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        function limpiarFormulario() {
+            $('#departamentoForm')[0].reset();
+            $('#idDepartamento').val('');
+        }
+
+        function editarDepartamento(id) {
+            $.get(`/departamentos/editar/${id}`, function(dep) {
+                $('#idDepartamento').val(dep.idDepartamento);
+                $('#nombreDepartamento').val(dep.nombreDepartamento);
+                $('#descripcionDepartamento').val(dep.descripcionDepartamento);
+            });
+        }
+
+        function eliminarDepartamento(id) {
+            if (confirm('¿Está seguro de eliminar este departamento?')) {
+                $.ajax({
+                    url: `/departamentos/eliminar/${id}`,
+                    type: 'DELETE',
+                    success: function() {
+                        cargarDepartamentos();
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            cargarDepartamentos();
+
+            $('#departamentoForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const departamento = {
+                    idDepartamento: $('#idDepartamento').val(),
+                    nombreDepartamento: $('#nombreDepartamento').val(),
+                    descripcionDepartamento: $('#descripcionDepartamento').val()
+                };
+
+                $.post('/departamentos/guardar', departamento, function() {
+                    limpiarFormulario();
+                    cargarDepartamentos();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

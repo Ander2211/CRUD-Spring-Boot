@@ -1,25 +1,41 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Empleados</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 </head>
 <body>
-<nav class="m-3">
-  <ul class="nav nav-tabs">
-    <li class="nav-item">
-      <a class="nav-link " aria-current="page" href="index.html">Active</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link " href="cargo.html">Cargos</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link active" href="empleado.html">Empleados</a>
-    </li>
-
-  </ul>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">Recursos Humanos</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cargo.html">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="departamento.html">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="empleado.html">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="tipo-contratacion.html">Tipos de Contratación</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="contratacion.html">Contrataciones</a>
+                </li>
+            </ul>
+        </div>
+    </div>
 </nav>
 
 <div class="container my-4">
@@ -86,18 +102,40 @@
     $.get(API_EMPLEADO, function(data) {
       let tabla = `<table class="table table-bordered">
                      <thead>
-                       <tr><th>ID</th><th>Nombre</th><th>Cargo</th></tr>
+                       <tr>
+                         <th>ID</th>
+                         <th>DUI</th>
+                         <th>Nombre</th>
+                         <th>Usuario</th>
+                         <th>Teléfono</th>
+                         <th>Correo</th>
+                         <th>Fecha Nacimiento</th>
+                         <th>Cargo</th>
+                         <th>Acciones</th>
+                       </tr>
                      </thead>
                      <tbody>`;
       data.forEach(e => {
         tabla += `<tr>
                     <td>${e.idEmpleado}</td>
+                    <td>${e.numeroDui}</td>
                     <td>${e.nombrePersona}</td>
-                    <td>${e.cargo}</td>
+                    <td>${e.usuario}</td>
+                    <td>${e.numericTelefono}</td>
+                    <td>${e.correctInstitutional}</td>
+                    <td>${new Date(e.fechAlacimiento).toLocaleDateString()}</td>
+                    <td>${e.cargo ? e.cargo.cargo : ''}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarEmpleado(${e.idEmpleado})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarEmpleado(${e.idEmpleado})">Eliminar</button>
+                    </td>
                   </tr>`;
       });
       tabla += `</tbody></table>`;
       $("#contenedor-empleados").html(tabla);
+    }).fail(function(xhr) {
+      console.error("Error al cargar empleados:", xhr);
+      alert("Error al cargar los empleados: " + (xhr.responseText || "Error desconocido"));
     });
   }
 
@@ -127,13 +165,33 @@
       numericTelefono: $("#numericTelefono").val().trim(),
       correctInstitutional: $("#correctInstitutional").val().trim(),
       fechAlacimiento: $("#fechAlacimiento").val(),
-      cargo: $("#cargoSelect option:selected").text() // Modificado: asignar el nombre del cargo
+      cargo: {
+        idCargo: $("#cargoSelect").val()
+      }
     };
 
-    if(!empleado.cargo){
-      alert("Seleccione un cargo.");
+    // Validaciones adicionales
+    if (!empleado.nombrePersona) {
+      alert("El nombre es obligatorio");
       return;
     }
+    if (!empleado.usuario) {
+      alert("El usuario es obligatorio");
+      return;
+    }
+    if (!empleado.correctInstitutional) {
+      alert("El correo institucional es obligatorio");
+      return;
+    }
+    if (!empleado.fechAlacimiento) {
+      alert("La fecha de nacimiento es obligatoria");
+      return;
+    }
+    if (!empleado.cargo.idCargo) {
+      alert("Debe seleccionar un cargo");
+      return;
+    }
+
     const metodo = empleado.idEmpleado ? "PUT" : "POST";
     const url = empleado.idEmpleado ? `${API_EMPLEADO}/${empleado.idEmpleado}` : API_EMPLEADO;
 
@@ -142,13 +200,20 @@
       type: metodo,
       contentType: "application/json",
       data: JSON.stringify(empleado),
-      success: function() {
+      success: function(response) {
         alert("Empleado guardado con éxito");
         $("#empleadoForm")[0].reset();
         cargarEmpleados();
       },
       error: function(xhr) {
-        alert("Error: " + (xhr.responseText || "Error al guardar el empleado"));
+        console.error("Error:", xhr);
+        let errorMessage = "Error al guardar el empleado";
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMessage += ": " + xhr.responseJSON.message;
+        } else if (xhr.responseText) {
+          errorMessage += ": " + xhr.responseText;
+        }
+        alert(errorMessage);
       }
     });
   }

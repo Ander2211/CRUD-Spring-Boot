@@ -2,6 +2,7 @@ package com.empresa.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.Date;
@@ -14,31 +15,38 @@ public class Empleado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idEmpleado")  // Asegurar que coincide con la BD
+    @Column(name = "idEmpleado")
     private Integer idEmpleado;
 
+    @NotBlank(message = "El DUI es obligatorio")
     @Pattern(regexp = "^[0-9]{8}-[0-9]$", message = "El DUI debe tener el formato 12345678-9")
-    @Column(name = "numer0Du1")
+    @Column(name = "numeroDui", nullable = false)
     private String numeroDui;
 
-    @Column(name = "nombrePersona")
+    @NotBlank(message = "El nombre es obligatorio")
+    @Column(name = "nombrePersona", nullable = false)
     private String nombrePersona;
 
-    @Column(name = "usuario")
+    @NotBlank(message = "El usuario es obligatorio")
+    @Column(name = "usuario", nullable = false)
     private String usuario;
 
+    @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(regexp = "^[0-9]{8}$", message = "El teléfono debe tener exactamente 8 dígitos")
-    @Column(name = "numericTelefono")
+    @Column(name = "numericTelefono", nullable = false)
     private String numericTelefono;
 
-    @Column(name = "correctInstitutional")
+    @NotBlank(message = "El correo institucional es obligatorio")
+    @Column(name = "correctInstitutional", nullable = false)
     private String correctInstitutional;
 
-    @Column(name = "fechAlacimiento")
+    @Column(name = "fechAlacimiento", nullable = false)
+    @Temporal(TemporalType.DATE)
     private Date fechAlacimiento;
 
-    @Column(nullable = false)
-    private String cargo;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "idCargo", nullable = false)
+    private Cargo cargo;
 
     // Getters y Setters
 }
